@@ -79,21 +79,6 @@ Siga os passos abaixo para configurar e rodar a aplicação em seu ambiente loca
     docker-compose down --volumes
     ```
 
-## 📂 Estrutura do Projeto (Simplificada)
-Anka-Tech-Case/
-├── anka-tech-backend/      # Código fonte do Backend (Node.js, Fastify, Prisma)
-│   ├── prisma/             # Schema e migrações do Prisma
-│   ├── src/                # Código principal do backend
-│   ├── Dockerfile          # Dockerfile para o backend
-│   └── entrypoint.sh       # Script para aplicar migrações e iniciar o backend
-│   └── ...
-├── anka-tech-frontend/     # Código fonte do Frontend (Next.js)
-│   ├── public/             # Arquivos estáticos (ex: logo)
-│   ├── src/                # Código principal do frontend (app router, components, etc.)
-│   ├── Dockerfile          # Dockerfile para o frontend
-│   └── ...
-└── docker-compose.yml      # Arquivo de orquestração do Docker Compose
-└── README.md               # Este arquivo
 ## ✅ Entregáveis do Case Atendidos
 
 * **Repositórios:** Códigos-fonte do backend e frontend organizados.
