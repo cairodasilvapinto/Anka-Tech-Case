@@ -2,25 +2,25 @@
 
 ## 🚀 Sobre o Projeto
 
-Este projeto foi desenvolvido como parte do case para o processo seletivo da Anka Tech. Trata-se de uma aplicação full-stack para um escritório de investimentos, permitindo o gerenciamento de clientes e a visualização de informações básicas de ativos financeiros. [cite: 1, 24, 70] A aplicação foi totalmente desenvolvida em TypeScript e é containerizada utilizando Docker e Docker Compose. [cite: 2, 25, 71]
+Este projeto foi desenvolvido como parte do case para o processo seletivo da Anka Tech. Trata-se de uma aplicação full-stack para um escritório de investimentos, permitindo o gerenciamento de clientes e a visualização de informações básicas de ativos financeiros. A aplicação foi totalmente desenvolvida em TypeScript e é containerizada utilizando Docker e Docker Compose.
 
 O objetivo principal é demonstrar habilidades no desenvolvimento com tecnologias modernas, incluindo Node.js com Fastify e Prisma para o backend, Next.js com React Query, React Hook Form, Zod e ShadCN para o frontend, e MySQL como banco de dados.
 
 ### Funcionalidades Implementadas:
 * **Backend:**
-    * CRUD completo para Clientes (Nome, Email, Status - Ativo/Inativo). [cite: 3, 26, 72]
-    * Endpoint para listar uma seleção fixa de Ativos Financeiros disponíveis. [cite: 7, 30, 76]
+    * CRUD completo para Clientes (Nome, Email, Status - Ativo/Inativo).
+    * Endpoint para listar uma seleção fixa de Ativos Financeiros disponíveis.
     * Endpoints para criar, listar e remover Alocações de Ativos Financeiros por cliente.
 * **Frontend:**
     * Página de Boas-vindas/Dashboard.
-    * Página de Clientes: Permite listar, adicionar, editar (nome, email, status) e excluir clientes. [cite: 11, 34, 80]
-    * Página de Alocações por Cliente: Permite visualizar os ativos alocados a um cliente específico, adicionar novas alocações (selecionando de uma lista de ativos fixos e definindo a quantidade) e remover alocações existentes. [cite: 4, 5, 27, 28, 73, 74]
-    * Página de Ativos: Exibe a lista fixa de ativos financeiros disponíveis (somente leitura). [cite: 12, 35, 81]
+    * Página de Clientes: Permite listar, adicionar, editar (nome, email, status) e excluir clientes.
+    * Página de Alocações por Cliente: Permite visualizar os ativos alocados a um cliente específico, adicionar novas alocações (selecionando de uma lista de ativos fixos e definindo a quantidade) e remover alocações existentes.
+    * Página de Ativos: Exibe a lista fixa de ativos financeiros disponíveis (somente leitura).
 * **Tecnologias:**
-    * **Backend:** Node.js, Fastify, Prisma ORM, Zod, TypeScript. [cite: 6, 8, 10, 29, 31, 33, 75, 77, 79]
-    * **Frontend:** Next.js, React Query, React Hook Form, Zod, Axios, ShadCN, TypeScript. [cite: 11, 13, 14, 15, 16, 34, 36, 37, 38, 39, 80, 82, 83, 84, 85]
-    * **Banco de Dados:** MySQL. [cite: 9, 32, 78]
-    * **Containerização:** Docker, Docker Compose. [cite: 2, 18, 25, 41, 71, 87]
+    * **Backend:** Node.js, Fastify, Prisma ORM, Zod, TypeScript.
+    * **Frontend:** Next.js, React Query, React Hook Form, Zod, Axios, ShadCN, TypeScript.
+    * **Banco de Dados:** MySQL.
+    * **Containerização:** Docker, Docker Compose.
 
 ## 🛠️ Pré-requisitos
 
@@ -42,7 +42,7 @@ Siga os passos abaixo para configurar e rodar a aplicação em seu ambiente loca
 2.  **Variáveis de Ambiente (Backend):**
     O backend espera um arquivo `.env` para a URL do banco de dados quando rodado localmente fora do Docker para desenvolvimento de migrações. No entanto, para a execução via Docker Compose, a `DATABASE_URL` é injetada diretamente no serviço `backend` pelo `docker-compose.yml`.
     * Dentro da pasta `anka-tech-backend/`, existe um arquivo `prisma/schema.prisma` que define o schema do banco.
-    * As migrações do Prisma (`prisma/migrations/`) estão incluídas e serão aplicadas automaticamente ao banco de dados quando o contêiner do backend iniciar pela primeira vez (graças ao script `entrypoint.sh`). [cite: 21, 44, 90]
+    * As migrações do Prisma (`prisma/migrations/`) estão incluídas e serão aplicadas automaticamente ao banco de dados quando o contêiner do backend iniciar pela primeira vez (graças ao script `entrypoint.sh`).
 
 3.  **Subir os Contêineres com Docker Compose:**
     Na pasta raiz do projeto (`Anka-Tech-Case/`, onde está o arquivo `docker-compose.yml`), execute o seguinte comando no seu terminal:
@@ -96,10 +96,10 @@ Anka-Tech-Case/
 └── README.md               # Este arquivo
 ## ✅ Entregáveis do Case Atendidos
 
-* **Repositórios:** Códigos-fonte do backend e frontend organizados. [cite: 21, 44, 90]
-* **Configuração Prisma:** Script de migração inicial (`..._init_clients`) e subsequente (`..._add_client_asset_allocations`) para criar as tabelas no banco. [cite: 21, 44, 90]
-* **CRUD básico com Prisma:** Implementado para clientes e alocações de ativos. [cite: 22, 45, 91]
-* **Interface Next.js simplificada com ShadCN:** Desenvolvida para as páginas de Clientes e Ativos (e Alocações). [cite: 13, 15, 22, 36, 38, 45, 82, 84, 91]
-* **Configuração do Docker Compose:** Para rodar os serviços `db` (MySQL) e `backend` (Fastify). O frontend também foi dockerizado para uma solução completa. [cite: 18, 41, 87]
+* **Repositórios:** Códigos-fonte do backend e frontend organizados.
+* **Configuração Prisma:** Script de migração inicial (`..._init_clients`) e subsequente (`..._add_client_asset_allocations`) para criar as tabelas no banco.
+* **CRUD básico com Prisma:** Implementado para clientes e alocações de ativos.
+* **Interface Next.js simplificada com ShadCN:** Desenvolvida para as páginas de Clientes e Ativos (e Alocações).
+* **Configuração do Docker Compose:** Para rodar os serviços `db` (MySQL) e `backend` (Fastify). O frontend também foi dockerizado para uma solução completa.
 
 ---
