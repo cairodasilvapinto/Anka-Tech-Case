@@ -4,6 +4,7 @@ import { AxiosError } from "axios";
 import React, { useState } from "react";
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 
 import {
   Table,
@@ -181,45 +182,50 @@ export default function ClientsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {clients.map((client) => (
+                {clients.map((client) => (
                 <TableRow key={client.id}>
                   <TableCell className="font-medium break-all">{client.name}</TableCell>
                   <TableCell className="break-all">{client.email}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        client.status === "ACTIVE"
-                          ? "bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100"
-                          : "bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100"
-                      }`}
-                    >
-                      {client.status === "ACTIVE" ? "Ativo" : "Inativo"}
-                    </span>
+                  <span
+                    className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                    client.status === "ACTIVE"
+                      ? "bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100"
+                      : "bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100"
+                    }`}
+                  >
+                    {client.status === "ACTIVE" ? "Ativo" : "Inativo"}
+                  </span>
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    {new Date(client.createdAt).toLocaleDateString("pt-BR", {
-                      day: '2-digit', month: '2-digit', year: 'numeric'
-                    })}
+                  {new Date(client.createdAt).toLocaleDateString("pt-BR", {
+                    day: '2-digit', month: '2-digit', year: 'numeric'
+                  })}
                   </TableCell>
                   <TableCell className="text-right space-x-2 whitespace-nowrap">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditClick(client)}
-                    >
-                      Editar
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditClick(client)}
+                  >
+                    Editar
+                  </Button>
+                  <Link href={`/clients/${client.id}/allocations`} passHref>
+                    <Button variant="outline" size="sm">
+                    Alocações
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteClick(client.id)}
-                      disabled={mutationDelete.isPending && mutationDelete.variables === client.id}
-                    >
-                      {mutationDelete.isPending && mutationDelete.variables === client.id ? "Excluindo..." : "Excluir"}
-                    </Button>
+                  </Link>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteClick(client.id)}
+                    disabled={mutationDelete.isPending && mutationDelete.variables === client.id}
+                  >
+                    {mutationDelete.isPending && mutationDelete.variables === client.id ? "Excluindo..." : "Excluir"}
+                  </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                ))}
             </TableBody>
           </Table>
         </div>

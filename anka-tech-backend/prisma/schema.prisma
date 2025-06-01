@@ -19,10 +19,24 @@ enum ClientStatus {
 }
 
 model Client {
-  id        String       @id @default(cuid())
-  name      String
-  email     String       @unique
-  status    ClientStatus @default(ACTIVE)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id     String       @id @default(cuid())
+  name   String
+  email  String       @unique
+  status ClientStatus @default(ACTIVE)
+
+  allocations ClientAssetAllocation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- ADICIONE ESTE NOVO MODELO ---
+model ClientAssetAllocation {
+  id        String @id @default(cuid())
+  assetName String // Nome do ativo da nossa lista fixa (ex: "Ação XYZ")
+  quantity  Float  // Quantidade que o cliente possui deste ativo
+
+  clientId String // Chave estrangeira para o Cliente
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade) // Relação com Cliente
+
+  allocatedAt DateTime @default(now())
 }

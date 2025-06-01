@@ -20,10 +20,7 @@ export const updateClientSchema = z.object({
 // TypeScript type inferido a partir do schema de atualização
 export type UpdateClientInput = z.infer<typeof updateClientSchema>;
 
-// Schema para validar parâmetros de rota que esperam um ID de cliente
-// Útil para rotas como GET /clients/:id ou PUT /clients/:id
-export const clientIdParamsSchema = z.object({
-  id: z.string().cuid({ message: "Formato de CUID inválido para o ID" }), // O ID deve ser uma string no formato CUID (usado pelo Prisma)
+export const clientIdSpecificParamsSchema = z.object({
+  clientId: z.string().cuid({ message: "Formato de CUID inválido para clientId" }),
 });
-
-export type ClientIdParams = z.infer<typeof clientIdParamsSchema>;
+export type ClientIdSpecificParams = z.infer<typeof clientIdSpecificParamsSchema>;

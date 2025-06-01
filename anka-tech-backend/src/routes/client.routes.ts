@@ -1,66 +1,63 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { prisma } from '../lib/prisma'; // Nossa instância do Prisma Client
+import { prisma } from '../lib/prisma';
 import {
   createClientSchema,
   CreateClientInput,
   updateClientSchema,
   UpdateClientInput,
-  clientIdParamsSchema,
+  clientIdParamsSchema,       // Para rotas /clients/:id
   ClientIdParams,
-} from '../schemas/client.schemas'; // Nossos schemas Zod para validação
+  clientIdSpecificParamsSchema, // Para rotas /clients/:clientId/...
+  ClientIdSpecificParams,
+} from '../schemas/client.schemas'; // Seus schemas de cliente
+import {
+  createAllocationBodySchema,
+  CreateAllocationBodyInput,
+  allocationIdParamsSchema,
+  AllocationIdParams,
+} from '../schemas/allocation.schemas'; // Seus schemas de alocação
+import { getFixedAssets } from '../lib/fixedAssets';
 
 export async function clientRoutes(fastify: FastifyInstance) {
-  // Rota para CRIAR um novo cliente
+  // --- ROTAS CRUD DE CLIENTES ---
+
   fastify.post<{ Body: CreateClientInput }>(
     '/clients',
-    {
-      schema: {
-        body: createClientSchema, // Valida o corpo da requisição com o schema Zod
-        // Opcional: definir um schema de resposta para documentação/validação
-        // response: {
-        //   201: { $ref: 'clientResponseSchema#' } // Supondo um schema de resposta definido
-        // }
-      },
-    },
+    { schema: { body: createClientSchema } },
     async (request: FastifyRequest<{ Body: CreateClientInput }>, reply: FastifyReply) => {
       try {
         const client = await prisma.client.create({
-          data: request.body, // Os dados já foram validados pelo Zod
+          data: request.body,
         });
         return reply.status(201).send(client);
       } catch (error: any) {
         if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
-          // Código P2002 do Prisma indica violação de constraint única (ex: email duplicado)
           return reply.status(409).send({ message: 'Este email já está em uso.' });
         }
-        fastify.log.error(error); // Loga o erro no console do Fastify
-        return reply.status(500).send({ message: 'Erro interno no servidor' });
+        fastify.log.error(error, "Erro ao criar cliente.");
+        return reply.status(500).send({ message: 'Erro interno ao criar cliente.' });
       }
     }
   );
 
-  // Rota para LISTAR todos os clientes
   fastify.get(
     '/clients',
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        const clients = await prisma.client.findMany();
+        const clients = await prisma.client.findMany({
+          orderBy: { createdAt: 'desc' } // Opcional: listar os mais recentes primeiro
+        });
         return reply.status(200).send(clients);
       } catch (error) {
-        fastify.log.error(error);
-        return reply.status(500).send({ message: 'Erro interno no servidor' });
+        fastify.log.error(error, "Erro ao listar clientes.");
+        return reply.status(500).send({ message: 'Erro interno ao listar clientes.' });
       }
     }
   );
 
-  // Rota para BUSCAR um cliente específico pelo ID
   fastify.get<{ Params: ClientIdParams }>(
     '/clients/:id',
-    {
-      schema: {
-        params: clientIdParamsSchema, // Valida se o ID na URL está no formato CUID
-      },
-    },
+    { schema: { params: clientIdParamsSchema } },
     async (request: FastifyRequest<{ Params: ClientIdParams }>, reply: FastifyReply) => {
       try {
         const { id } = request.params;
@@ -68,85 +65,147 @@ export async function clientRoutes(fastify: FastifyInstance) {
           where: { id },
         });
         if (!client) {
-          return reply.status(404).send({ message: 'Cliente não encontrado' });
+          return reply.status(404).send({ message: 'Cliente não encontrado.' });
         }
         return reply.status(200).send(client);
       } catch (error) {
-        fastify.log.error(error);
-        return reply.status(500).send({ message: 'Erro interno no servidor' });
+        fastify.log.error(error, "Erro ao buscar cliente por ID.");
+        return reply.status(500).send({ message: 'Erro interno ao buscar cliente.' });
       }
     }
   );
 
-  // Rota para EDITAR (Atualizar) um cliente existente pelo ID
   fastify.put<{ Body: UpdateClientInput; Params: ClientIdParams }>(
     '/clients/:id',
-    {
-      schema: {
-        body: updateClientSchema, // Valida o corpo da requisição
-        params: clientIdParamsSchema, // Valida o ID na URL
-      },
-    },
+    { schema: { body: updateClientSchema, params: clientIdParamsSchema } },
     async (request: FastifyRequest<{ Body: UpdateClientInput; Params: ClientIdParams }>, reply: FastifyReply) => {
       try {
         const { id } = request.params;
         const client = await prisma.client.update({
           where: { id },
-          data: request.body, // Dados para atualização (validados pelo Zod)
+          data: request.body,
         });
         return reply.status(200).send(client);
       } catch (error: any) {
         if (error.code === 'P2025') {
-          // P2025: Registro a ser atualizado não encontrado
-          return reply.status(404).send({ message: 'Cliente não encontrado para atualização' });
+          return reply.status(404).send({ message: 'Cliente não encontrado para atualização.' });
         }
         if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
           return reply.status(409).send({ message: 'Este email já está em uso por outro cliente.' });
         }
-        fastify.log.error(error);
-        return reply.status(500).send({ message: 'Erro interno no servidor' });
+        fastify.log.error(error, "Erro ao atualizar cliente.");
+        return reply.status(500).send({ message: 'Erro interno ao atualizar cliente.' });
       }
     }
   );
-  // Rota para DELETAR um cliente pelo ID
+
   fastify.delete<{ Params: ClientIdParams }>(
-  '/clients/:id',
-  {
-    schema: {
-      params: clientIdParamsSchema, // Valida o ID
-    },
-  },
-  async (request: FastifyRequest<{ Params: ClientIdParams }>, reply: FastifyReply) => {
-    try {
-      const { id } = request.params;
-      const clientExists = await prisma.client.findUnique({ where: { id } });
-      if (!clientExists) {
-        return reply.status(404).send({ message: 'Cliente não encontrado para exclusão' });
+    '/clients/:id',
+    { schema: { params: clientIdParamsSchema } },
+    async (request: FastifyRequest<{ Params: ClientIdParams }>, reply: FastifyReply) => {
+      try {
+        const { id } = request.params;
+        // O Prisma lança P2025 se o registro não existir, tratado no catch
+        await prisma.client.delete({
+          where: { id },
+        });
+        return reply.status(204).send();
+      } catch (error: any) {
+        if (error.code === 'P2025') {
+          return reply.status(404).send({ message: 'Cliente não encontrado para exclusão.' });
+        }
+        fastify.log.error(error, 'Erro ao excluir cliente');
+        return reply.status(500).send({ message: 'Erro interno ao tentar excluir o cliente.' });
       }
-      await prisma.client.delete({
-        where: { id },
-      });
-      return reply.status(204).send(); // Sucesso na deleção
-    } catch (error: any) {
-      if (error.code === 'P2025') { 
-        return reply.status(404).send({ message: 'Cliente não encontrado para exclusão (Erro Prisma P2025)' });
-      }
-      fastify.log.error(error, 'Erro ao excluir cliente');
-      return reply.status(500).send({ message: 'Erro interno no servidor ao tentar excluir o cliente.' });
     }
-  }
-);
-  // Você pode adicionar um schema de resposta compartilhado aqui se desejar, para referência em 'response'
-  // fastify.addSchema({
-  //   $id: 'clientResponseSchema',
-  //   type: 'object',
-  //   properties: {
-  //     id: { type: 'string' },
-  //     name: { type: 'string' },
-  //     email: { type: 'string' },
-  //     status: { type: 'string', enum: ['ACTIVE', 'INACTIVE'] },
-  //     createdAt: { type: 'string', format: 'date-time' },
-  //     updatedAt: { type: 'string', format: 'date-time' },
-  //   }
-  // });
+  );
+
+  // --- NOVAS ROTAS PARA ALOCAÇÕES DE ATIVOS POR CLIENTE ---
+
+  // POST /api/clients/:clientId/allocations - Adicionar uma alocação a um cliente
+  fastify.post<{ Params: ClientIdSpecificParams; Body: CreateAllocationBodyInput }>(
+    '/clients/:clientId/allocations',
+    { schema: { params: clientIdSpecificParamsSchema, body: createAllocationBodySchema } },
+    async (request, reply) => {
+      try { // <--- Bloco try adicionado para envolver toda a lógica
+        const { clientId } = request.params;
+        const { assetName, quantity } = request.body;
+
+        const clientExists = await prisma.client.findUnique({ where: { id: clientId } });
+        if (!clientExists) {
+          return reply.status(404).send({ message: "Cliente não encontrado." });
+        }
+
+        const fixedAssets = getFixedAssets();
+        if (!fixedAssets.some(asset => asset.name === assetName)) {
+          return reply.status(400).send({ message: `Ativo '${assetName}' inválido ou não encontrado na lista de ativos permitidos.` });
+        }
+
+        const newAllocation = await prisma.clientAssetAllocation.create({
+          data: {
+            clientId: clientId,
+            assetName,
+            quantity,
+          },
+        });
+        return reply.status(201).send(newAllocation);
+      } catch (error) { // <--- Bloco catch correspondente
+        fastify.log.error(error, "Erro ao criar alocação para o cliente.");
+        return reply.status(500).send({ message: 'Erro interno ao criar alocação.' });
+      }
+    }
+  );
+
+  // GET /api/clients/:clientId/allocations - Listar alocações de um cliente
+  fastify.get<{ Params: ClientIdSpecificParams }>(
+    '/clients/:clientId/allocations',
+    { schema: { params: clientIdSpecificParamsSchema } },
+    async (request, reply) => {
+      try { // <--- Bloco try já estava correto, mas garantindo que envolva tudo
+        const { clientId } = request.params;
+        const allocations = await prisma.clientAssetAllocation.findMany({
+          where: { clientId },
+          orderBy: { allocatedAt: 'desc' }
+        });
+
+        const fixedAssets = getFixedAssets();
+        const enrichedAllocations = allocations.map(alloc => {
+          const assetDetail = fixedAssets.find(fa => fa.name === alloc.assetName);
+          const currentAssetValue = assetDetail ? assetDetail.value : 0;
+          return {
+            ...alloc,
+            currentAssetValue,
+            totalValue: currentAssetValue * alloc.quantity,
+          };
+        });
+
+        return reply.send(enrichedAllocations);
+      } catch (error) {
+        fastify.log.error(error, "Erro ao buscar alocações do cliente.");
+        return reply.status(500).send({ message: 'Erro interno ao buscar alocações.' });
+      }
+    }
+  );
+
+  // DELETE /api/allocations/:id - Remover uma alocação específica
+  fastify.delete<{ Params: AllocationIdParams }>(
+    '/allocations/:id',
+    { schema: { params: allocationIdParamsSchema } },
+    async (request, reply) => {
+      try {
+        const { id } = request.params;
+        // O Prisma lança P2025 se o registro não existir, tratado no catch
+        await prisma.clientAssetAllocation.delete({
+          where: { id },
+        });
+        return reply.status(204).send();
+      } catch (error: any) {
+        if (error.code === 'P2025') {
+          return reply.status(404).send({ message: 'Alocação não encontrada.' });
+        }
+        fastify.log.error(error, "Erro ao remover alocação.");
+        return reply.status(500).send({ message: 'Erro interno ao remover alocação.' });
+      }
+    }
+  );
 }
