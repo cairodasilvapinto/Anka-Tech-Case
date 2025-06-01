@@ -54,6 +54,29 @@ Siga os passos abaixo para configurar e rodar a aplicação em seu ambiente loca
 
     Aguarde alguns instantes para que as imagens sejam construídas (na primeira vez pode demorar um pouco mais) e os contêineres iniciem. O serviço `db` (MySQL) pode levar um momento para estar totalmente pronto e aceitar conexões. O script de entrypoint do backend aguardará o banco e aplicará as migrações.
 
+    **Alternativa (Inicialização Sequencial Controlada):**
+    Se preferir iniciar e construir cada serviço individualmente e em sequência para maior controle ou para observar os logs de cada um separadamente durante a primeira inicialização, você pode usar os seguintes comandos. Execute cada um e aguarde sua conclusão antes de prosseguir para o próximo:
+
+    * **Iniciar o Banco de Dados (db):**
+        ```bash
+        docker-compose up --build -d db
+        ```
+        Aguarde alguns momentos até que o MySQL esteja pronto (você pode verificar com `docker-compose logs -f db` e esperar pela mensagem "ready for connections").
+
+    * **Iniciar o Backend:**
+        ```bash
+        docker-compose up --build -d backend
+        ```
+        Isso construirá a imagem do backend (se ainda não existir ou se `--build` for usado) e o iniciará. O entrypoint aplicará as migrações. Verifique os logs com `docker-compose logs -f backend`.
+
+    * **Iniciar o Frontend:**
+        ```bash
+        docker-compose up --build -d frontend
+        ```
+        Isso construirá a imagem do frontend e o iniciará. Verifique os logs com `docker-compose logs -f frontend`.
+
+    Mesmo ao usar os comandos sequenciais, o `depends_on` no `docker-compose.yml` ainda ajuda a garantir a ordem correta se, por exemplo, o `backend` for reiniciado.
+
 4.  **Acessando a Aplicação:**
     * **Frontend:** Após os contêineres estarem rodando, acesse no seu navegador:
         `http://localhost:3000`
