@@ -39,24 +39,21 @@ services:
 
   frontend:
     build:
-      context: ./anka-tech-frontend # Caminho para a pasta do frontend
+      context: ./anka-tech-frontend
       dockerfile: Dockerfile
       args:
-        # Passa a URL da API para o build do Next.js
-        # 'backend' é o nome do serviço do backend no Docker Compose
-        NEXT_PUBLIC_API_URL: http://backend:3001/api
+        # Altere esta URL para ser acessível pelo navegador do host
+        NEXT_PUBLIC_API_URL: http://localhost:3001/api # <--- CORRIGIDO
     container_name: anka-app-frontend-client
     restart: always
     ports:
-      - "3000:3000" # Next.js geralmente roda na porta 3000
+      - "3000:3000"
     depends_on:
-      - backend # Frontend depende do backend
-    # Não precisa de environment aqui se já foi passado no build arg e usado pelo Next.js
-    # A menos que você queira sobrescrever em tempo de execução.
+      - backend
     volumes:
-      - ./anka-tech-frontend:/app # Mapeia código para dev (hot reload se o Dockerfile do frontend estiver configurado para isso)
+      - ./anka-tech-frontend:/app
       - /app/node_modules
-      - /app/.next # Para persistir o cache do build do Next.js entre reinicializações se não estiver usando volumes para código
+      - /app/.next
     networks:
       - anka_network
 

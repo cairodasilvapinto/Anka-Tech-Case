@@ -1,7 +1,7 @@
 # Anka-Tech-Case/anka-tech-frontend/Dockerfile
 
 # Estágio de Build
-FROM node:18-alpine AS builder
+FROM node:20-alpine3.19 AS builder
 WORKDIR /app
 
 # Copia package.json e lock file
@@ -21,11 +21,11 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN npm run build
 
 # Estágio de Produção/Execução
-FROM node:20-alpine AS runner
+FROM node:20-alpine3.19 AS runner
 WORKDIR /app
 
 # Define o ambiente para produção
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # Copia os arquivos de build do estágio anterior
 COPY --from=builder /app/.next ./.next
