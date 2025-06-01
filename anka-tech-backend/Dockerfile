@@ -10,7 +10,7 @@ RUN npm install
 COPY prisma ./prisma/
 # Copie o entrypoint.sh para dentro da imagem
 COPY entrypoint.sh /usr/src/app/entrypoint.sh
-RUN chmod +x /usr/src/app/entrypoint.sh # Torna o script executável
+RUN chmod +x /usr/src/app/entrypoint.sh
 
 COPY . .
 
