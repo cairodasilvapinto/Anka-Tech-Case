@@ -1,10 +1,10 @@
 // src/app/clients/page.tsx
 "use client";
-import { AxiosError } from "axios";
+import { AxiosError } from "axios"; // Certifique-se que está importando AxiosError
 import React, { useState } from "react";
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
+import Link from "next/link"; // Importação do Link para navegação
 
 import {
   Table,
@@ -23,10 +23,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  // DialogClose não é usado diretamente aqui, mas sim dentro dos forms
 } from "@/components/ui/dialog";
 
-import { EditClientForm } from "@/components/EditClientForm"; // Certifique-se que este caminho está correto
-import { AddClientForm } from "@/components/AddClientForm";   // Certifique-se que este caminho está correto
+import { EditClientForm } from "@/components/EditClientForm";
+import { AddClientForm } from "@/components/AddClientForm";
 
 // Definindo o tipo para um Cliente
 interface Client {
@@ -39,8 +40,9 @@ interface Client {
 }
 
 // USA A VARIÁVEL DE AMBIENTE COM FALLBACK
-console.log("API URL USADA NO CLIENTE:", process.env.NEXT_PUBLIC_API_URL);
+console.log("API URL USADA NO CLIENTE (clients/page.tsx):", process.env.NEXT_PUBLIC_API_URL);
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+
 // Função que busca os clientes
 const fetchClients = async (): Promise<Client[]> => {
   if (!API_BASE_URL) {
@@ -80,19 +82,17 @@ export default function ClientsPage() {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       alert("Cliente excluído com sucesso!");
     },
-  onError: (error: unknown) => { // Ou (error: Error) ou (error: AxiosError) se importar AxiosError
-    // Se usar unknown ou Error genérico, pode precisar de type assertion ou type guard para acessar error.response
-    // Use AxiosError para tipar corretamente o erro
-    const axiosError = error as AxiosError<{ message?: string }>;
-    console.error("Objeto de erro completo do Axios (Excluir):", axiosError);
-    if (axiosError.response) {
-      alert(`Erro ${axiosError.response.status}: ${axiosError.response.data?.message || 'Erro ao excluir o cliente.'}`);
-    } else if (axiosError.request) {
-      alert("Erro de rede ao excluir: Nenhuma resposta recebida do servidor.");
-    } else {
-      alert(`Erro ao configurar requisição de exclusão: ${axiosError.message}`);
-    }
-  },
+    onError: (error: unknown) => {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      console.error("Objeto de erro completo do Axios (Excluir):", axiosError);
+      if (axiosError.isAxiosError && axiosError.response) {
+        alert(`Erro ${axiosError.response.status}: ${axiosError.response.data?.message || 'Erro ao excluir o cliente.'}`);
+      } else if (axiosError.isAxiosError && axiosError.request) {
+        alert("Erro de rede ao excluir: Nenhuma resposta recebida do servidor.");
+      } else {
+        alert(`Erro ao configurar requisição de exclusão: ${(error as Error).message}`);
+      }
+    },
   });
 
   const handleEditClick = (client: Client) => {
@@ -115,7 +115,11 @@ export default function ClientsPage() {
       <div className="container mx-auto p-4 md:p-8">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
           <h1 className="text-2xl md:text-3xl font-bold">Meus Clientes</h1>
-          <Skeleton className="h-10 w-40" />
+          {/* Adicionado um div para os botões no estado de loading também */}
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-36" /> {/* Skeleton para o botão "Ver Lista de Ativos" */}
+            <Skeleton className="h-10 w-40" /> {/* Skeleton para o botão "Adicionar Novo Cliente" */}
+          </div>
         </div>
         <div className="border rounded-md">
           <Table>
@@ -137,6 +141,7 @@ export default function ClientsPage() {
                   <TableCell className="hidden lg:table-cell"><Skeleton className="h-5 w-24" /></TableCell>
                   <TableCell className="text-right space-x-2">
                     <Skeleton className="h-8 w-16 inline-block" />
+                    <Skeleton className="h-8 w-20 inline-block" /> {/* Ajustado para Alocações */}
                     <Skeleton className="h-8 w-16 inline-block" />
                   </TableCell>
                 </TableRow>
@@ -161,12 +166,19 @@ export default function ClientsPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-8">
+      {/* === ÁREA DO CABEÇALHO DA PÁGINA COM BOTÕES === */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className="text-2xl md:text-3xl font-bold">Meus Clientes</h1>
-        <Button onClick={handleOpenAddClientModal}>
-          Adicionar Novo Cliente
-        </Button>
+        <div className="flex flex-wrap gap-2"> {/* Adicionado flex-wrap para melhor responsividade */}
+          <Link href="/assets" passHref>
+            <Button variant="outline">Ver Lista de Ativos</Button>
+          </Link>
+          <Button onClick={handleOpenAddClientModal}>
+            Adicionar Novo Cliente
+          </Button>
+        </div>
       </div>
+      {/* === FIM DA ÁREA DO CABEÇALHO === */}
 
       {clients && clients.length > 0 ? (
         <div className="border rounded-md">
@@ -182,50 +194,51 @@ export default function ClientsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-                {clients.map((client) => (
+              {clients.map((client) => (
                 <TableRow key={client.id}>
                   <TableCell className="font-medium break-all">{client.name}</TableCell>
                   <TableCell className="break-all">{client.email}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                  <span
-                    className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    client.status === "ACTIVE"
-                      ? "bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100"
-                      : "bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100"
-                    }`}
-                  >
-                    {client.status === "ACTIVE" ? "Ativo" : "Inativo"}
-                  </span>
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        client.status === "ACTIVE"
+                          ? "bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100"
+                          : "bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100"
+                      }`}
+                    >
+                      {client.status === "ACTIVE" ? "Ativo" : "Inativo"}
+                    </span>
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                  {new Date(client.createdAt).toLocaleDateString("pt-BR", {
-                    day: '2-digit', month: '2-digit', year: 'numeric'
-                  })}
+                    {new Date(client.createdAt).toLocaleDateString("pt-BR", {
+                      day: '2-digit', month: '2-digit', year: 'numeric'
+                    })}
                   </TableCell>
                   <TableCell className="text-right space-x-2 whitespace-nowrap">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditClick(client)}
-                  >
-                    Editar
-                  </Button>
-                  <Link href={`/clients/${client.id}/allocations`} passHref>
-                    <Button variant="outline" size="sm">
-                    Alocações
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditClick(client)}
+                    >
+                      Editar
                     </Button>
-                  </Link>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteClick(client.id)}
-                    disabled={mutationDelete.isPending && mutationDelete.variables === client.id}
-                  >
-                    {mutationDelete.isPending && mutationDelete.variables === client.id ? "Excluindo..." : "Excluir"}
-                  </Button>
+                    {/* Botão para Alocações adicionado anteriormente */}
+                    <Link href={`/clients/${client.id}/allocations`} passHref>
+                      <Button variant="outline" size="sm">
+                        Alocações
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteClick(client.id)}
+                      disabled={mutationDelete.isPending && mutationDelete.variables === client.id}
+                    >
+                      {mutationDelete.isPending && mutationDelete.variables === client.id ? "Excluindo..." : "Excluir"}
+                    </Button>
                   </TableCell>
                 </TableRow>
-                ))}
+              ))}
             </TableBody>
           </Table>
         </div>
