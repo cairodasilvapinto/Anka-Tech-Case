@@ -1,0 +1,68 @@
+# Anka-Tech-Case/docker-compose.yml
+version: '3.8' # Pode ser omitido
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: anka-app-mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: mysecretpassword
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - anka_mysql_data:/var/lib/mysql
+    networks:
+      - anka_network
+
+  backend:
+    build:
+      context: ./anka-tech-backend # Caminho para a pasta do backend
+      dockerfile: Dockerfile
+    container_name: anka-app-backend-server
+    restart: always
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "mysql://user:userpassword@db:3306/mydb" # Conecta ao serviço 'db'
+      # Adicione outras variáveis de ambiente do backend aqui
+    volumes:
+      - ./anka-tech-backend:/usr/src/app # Mapeia código para dev (hot reload)
+      - /usr/src/app/node_modules
+    networks:
+      - anka_network
+
+  frontend:
+    build:
+      context: ./anka-tech-frontend # Caminho para a pasta do frontend
+      dockerfile: Dockerfile
+      args:
+        # Passa a URL da API para o build do Next.js
+        # 'backend' é o nome do serviço do backend no Docker Compose
+        NEXT_PUBLIC_API_URL: http://backend:3001/api
+    container_name: anka-app-frontend-client
+    restart: always
+    ports:
+      - "3000:3000" # Next.js geralmente roda na porta 3000
+    depends_on:
+      - backend # Frontend depende do backend
+    # Não precisa de environment aqui se já foi passado no build arg e usado pelo Next.js
+    # A menos que você queira sobrescrever em tempo de execução.
+    volumes:
+      - ./anka-tech-frontend:/app # Mapeia código para dev (hot reload se o Dockerfile do frontend estiver configurado para isso)
+      - /app/node_modules
+      - /app/.next # Para persistir o cache do build do Next.js entre reinicializações se não estiver usando volumes para código
+    networks:
+      - anka_network
+
+volumes:
+  anka_mysql_data:
+
+networks: # Define uma rede customizada para os serviços se comunicarem
+  anka_network:
+    driver: bridge
