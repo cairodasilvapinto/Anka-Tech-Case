@@ -35,8 +35,8 @@ Siga os passos abaixo para configurar e rodar a aplicação em seu ambiente loca
 
 1.  **Clone o Repositório:**
     ```bash
-    git clone <URL_DO_SEU_REPOSITORIO_GIT>
-    cd Anka-Tech-Case # Ou o nome da pasta raiz do seu projeto
+    git clone (https://github.com/cairodasilvapinto/Anka-Tech-Case.git)
+    cd Anka-Tech-Case
     ```
 
 2.  **Variáveis de Ambiente (Backend):**
